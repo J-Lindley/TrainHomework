@@ -8,8 +8,8 @@
 // 5. Calculate Total billed
 
 // 1. Initialize Firebase
-<script src="https://www.gstatic.com/firebasejs/5.9.3/firebase.js"></script>
-<script>
+
+
   // Initialize Firebase
   var config = {
     apiKey: "AIzaSyBTAs4GCP23So0OrfSjGjuoDbMRqihkZ9M",
@@ -19,7 +19,7 @@
     storageBucket: "trainschedule-bb31d.appspot.com",
     messagingSenderId: "235261451347"
   };
-</script>  
+ 
   firebase.initializeApp(config);
   
   var database = firebase.database();
@@ -31,27 +31,22 @@
     // Grabs user input
     var trainName = $("#train-name-input").val().trim();
     var trainDestination = $("#destination-input").val().trim();
-    var trainFrequency = moment($("#frequency-input").val().trim(), "MM/DD/YYYY").format("X");
-    var trainArrival = $("#next-input").val().trim();
+    var trainFrequency = $("#frequency-input").val().trim();
+    var firstTrainTime = $("#firstTime-input").val().trim(); 
   
     // Creates local "temporary" object for holding train data
     var newTrain = {
       name: trainName,
       destination: trainDestination,
       frequency: trainFrequency,
-      nextTime: nextArrival
+      firstTime: firstTrainTime
     };
-  
+    console.log(newTrain)
     // Uploads train data to the database
-    database.ref().push(newtrain);
+    database.ref().push(newTrain);
   
     // Logs everything to console
-    console.log(newTrain.name);
-    console.log(newTrain.destination);
-    console.log(newTrain.frequency);
-    console.log(newTrain.nextTime);
   
-    alert("Train successfully added");
   
     // Clears all of the text-boxes
     $("#train-name-input").val("");
@@ -66,35 +61,55 @@
   
     // Store everything into a variable.
     var trainName = childSnapshot.val().name;
-    var trainDestination = childSnapshot.val().role;
-    var trainFrequency = childSnapshot.val().start;
-    var trainArrival = childSnapshot.val().rate;
+    var trainDestination = childSnapshot.val().destination;
+    var tFrequency = childSnapshot.val().frequency;
+    var firstTime = childSnapshot.val().firstTime;
   
     // Employee Info
-    console.log(trainName);
-    console.log(trainDestination);
-    console.log(trainFrequency);
-    console.log(trainArrival);
+    console.log({trainName});
+    console.log({trainDestination});
+    console.log({tFrequency});
+    console.log({firstTime});
   
-    // Prettify the train arrival
-    var trainStartPretty = moment.unix(trainArrival).format("hh:mm");
-  
-    // Calculate the months worked using hardcore math
-    // To calculate the minutes away
-    var minutesAway = moment().diff(moment(minutesAway, "X"), "minutes");
-    console.log(minutesAway);
-  
+    //var tFrequency = 3;
+
+    // Time is 3:30 AM
+    //var firstTime = "03:30";
+
+    // First Time (pushed back 1 year to make sure it comes before current time)
+    var firstTimeConverted = moment(firstTime, "HH:mm").subtract(1, "years");
+    console.log(firstTimeConverted);
+
+    // Current Time
+    var currentTime = moment();
+    console.log(currentTime);
+    console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+
+    // Difference between the times
+    var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+    console.log("DIFFERENCE IN TIME: " + diffTime);
+
+    // Time apart (remainder)
+    var tRemainder = diffTime % tFrequency;
+    console.log(tRemainder);
+
+    // Minute Until Train
+    var tMinutesTillTrain = tFrequency - tRemainder;
+    console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
+
+    // Next Train
+    var nextTrain = moment().add(tMinutesTillTrain, "minutes");
+    console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
+
     // Calculate the total billed rate
-    var empBilled = empMonths * empRate;
-    console.log(empBilled);
-  
+    var nextArrival = moment(nextTrain).format("hh:mm A")
     // Create the new row
     var newRow = $("<tr>").append(
       $("<td>").text(trainName),
       $("<td>").text(trainDestination),
-      $("<td>").text(trainFrequency),
-      $("<td>").text(trainStartPretty),
-      $("<td>").text(minutesAway),
+      $("<td>").text(tFrequency),
+      $("<td>").text(nextArrival),
+      $("<td>").text(tMinutesTillTrain),
     );
   
     // Append the new row to the table
